@@ -348,7 +348,7 @@ export const products = [
     ratingCount: 342,
     stock: 150,
     images: [
-      'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800&q=80',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSesoPWiySN4Ay1gw7_-D1-7jgDbFq2wXzBP7g9ssi9fA&s=10',
       'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&q=80',
     ],
     tags: [],
