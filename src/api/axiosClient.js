@@ -32,7 +32,9 @@ apiClient.interceptors.response.use(
       : error.response?.data?.message || 'Something went wrong. Please try again.'
 
     // Network errors are expected until the Express API is live; don't spam toasts for those.
-    if (!isNetworkError) toast.error(message)
+    if (!isNetworkError && error.response?.status !== 401) {
+      toast.error(message)
+    }
 
     return Promise.reject(error)
   }

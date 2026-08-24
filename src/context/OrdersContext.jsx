@@ -1,41 +1,104 @@
-import { createContext, useContext, useEffect } from 'react'
-import { useLocalStorage } from '../hooks/useLocalStorage'
-import { seedOrders } from '../data/orders'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { fetchOrders, createOrder } from '../api/ordersApi'
 
 const OrdersContext = createContext(null)
 
-export function OrdersProvider({ children }) {
-  const [orders, setOrders] = useLocalStorage('cartly:orders', seedOrders)
+const normalizeOrder = (order) => ({
+  id: order._id || order.id,
+  date: order.createdAt || order.date,
+  status: order.status || 'pending',
+  total: order.total || 0,
 
-  // Refresh from the API layer on mount — resolves with real data once the
-  // Express API exists, otherwise quietly keeps whatever is in localStorage.
+  address:
+    order.shippingAddress
+      ? `${order.shippingAddress.fullName}, ${order.shippingAddress.addressLine}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`
+      : '',
+
+  shippingAddress: order.shippingAddress,
+
+  paymentMethod: order.paymentMethod,
+
+  items: (order.items || []).map((item) => ({
+    id: item.product?._id || item.product || item.id,
+    title: item.title || item.product?.title || '',
+    image: item.image || item.product?.images?.[0] || '',
+    price: item.price || item.product?.price || 0,
+    quantity: item.quantity || 1,
+  })),
+})
+
+export function OrdersProvider({ children }) {
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
     let cancelled = false
-    fetchOrders().then((remoteOrders) => {
-      if (!cancelled && Array.isArray(remoteOrders) && remoteOrders.length) {
-        setOrders(remoteOrders)
+
+    const loadOrders = async () => {
+      try {
+        const remoteOrders = await fetchOrders()
+
+        if (!cancelled) {
+          setOrders(
+            Array.isArray(remoteOrders)
+              ? remoteOrders.map(normalizeOrder)
+              : []
+          )
+        }
+      } catch (error) {
+        console.error('Failed to load orders:', error)
+
+        if (!cancelled) {
+          setOrders([])
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
-    })
+    }
+
+    loadOrders()
+
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const placeOrder = async ({ items, total, address, paymentMethod }) => {
-    const order = await createOrder({ items, total, address, paymentMethod })
-    setOrders((prev) => [order, ...prev])
-    return order
+  const placeOrder = async (orderData) => {
+    const createdOrder = await createOrder(orderData)
+
+    const normalizedOrder = normalizeOrder(createdOrder)
+
+    setOrders((prev) => [normalizedOrder, ...prev])
+
+    return normalizedOrder
   }
 
-  const getOrderById = (id) => orders.find((o) => o.id === id)
+  const getOrderById = (id) => {
+    return orders.find((order) => order.id === id)
+  }
 
-  return <OrdersContext.Provider value={{ orders, placeOrder, getOrderById }}>{children}</OrdersContext.Provider>
+  return (
+    <OrdersContext.Provider
+      value={{
+        orders,
+        loading,
+        placeOrder,
+        getOrderById,
+      }}
+    >
+      {children}
+    </OrdersContext.Provider>
+  )
 }
 
 export const useOrders = () => {
   const ctx = useContext(OrdersContext)
-  if (!ctx) throw new Error('useOrders must be used within OrdersProvider')
+
+  if (!ctx) {
+    throw new Error('useOrders must be used within OrdersProvider')
+  }
+
   return ctx
 }

@@ -18,6 +18,7 @@ import About from './pages/About.jsx'
 import Contact from './pages/Contact.jsx'
 import FAQ from './pages/FAQ.jsx'
 import NotFound from './pages/NotFound.jsx'
+import Admin from './pages/Admin.jsx'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/success/:orderId" element={<Success />} />
+            <Route path="/admin" element={<Admin />} />
           </Route>
 
           <Route path="/404" element={<NotFound />} />
