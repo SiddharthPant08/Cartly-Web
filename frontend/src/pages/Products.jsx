@@ -1,4 +1,4 @@
-import apiClient from './axiosClient'
+
 import { withFallback } from './mockAdapter'
 import { categories } from '../data/categories'
 
