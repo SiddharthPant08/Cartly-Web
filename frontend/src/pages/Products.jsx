@@ -1,9 +1,6 @@
+import apiClient from './axiosClient'
 
-import { categories } from '../data/categories'
-
-export function fetchCategories() {
-  return withFallback(
-    () => apiClient.get('/categories'),
-    () => categories
-  )
+export async function fetchCategories() {
+  const response = await apiClient.get('/categories')
+  return response.data.categories
 }
