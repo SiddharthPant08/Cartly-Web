@@ -4,7 +4,10 @@ import { categories } from '../data/categories'
 
 export function fetchCategories() {
   return withFallback(
-    () => apiClient.get('/categories'),
+    async () => {
+      const response = await apiClient.get('/categories')
+      return response.data.categories
+    },
     () => categories
   )
 }
