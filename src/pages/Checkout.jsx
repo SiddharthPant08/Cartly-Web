@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import {
   HiOutlineCreditCard,
@@ -38,19 +38,32 @@ export default function Checkout() {
   const { addresses } = useAuth()
   const navigate = useNavigate()
 
-  const [selectedAddress, setSelectedAddress] = useState(
-    addresses.find((a) => a.isDefault)?.id || addresses[0]?.id
-  )
-
+  const [selectedAddress, setSelectedAddress] = useState(null)
   const [payment, setPayment] = useState('card')
   const [placing, setPlacing] = useState(false)
+
+  // Select default address automatically
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddress) {
+      const defaultAddress =
+        addresses.find((address) => address.isDefault) ||
+        addresses[0]
+
+      setSelectedAddress(
+        defaultAddress._id || defaultAddress.id
+      )
+    }
+  }, [addresses, selectedAddress])
 
   if (items.length === 0) {
     return <Navigate to="/cart" replace />
   }
 
   const handlePlaceOrder = async () => {
-    const address = addresses.find((a) => a.id === selectedAddress)
+    const address = addresses.find(
+      (address) =>
+        (address._id || address.id) === selectedAddress
+    )
 
     if (!address) {
       toast.error('Please select a delivery address')
@@ -62,21 +75,21 @@ export default function Checkout() {
     try {
       const response = await apiClient.post('/orders', {
         shippingAddress: {
-          fullName: address.name,
-          phone: address.phone,
-          addressLine: address.line1,
-          city: address.city,
-          state: address.state,
-          postalCode: address.pincode,
-          country: address.country || 'India',
-        },
+        fullName: address.fullName || address.name,
+        phone: address.phone,
+        addressLine: address.addressLine || address.line1,
+        city: address.city,
+        state: address.state,
+        postalCode: address.postalCode || address.pincode,
+        country: address.country || 'India',
+      },
         paymentMethod: payment,
       })
 
       const order = response.data.order
 
       // Backend already cleared the MongoDB cart.
-      clearCart()
+      await clearCart()
 
       toast.success('Order placed successfully!')
 
@@ -110,39 +123,48 @@ export default function Checkout() {
             </h2>
 
             <div className="space-y-3">
-              {addresses.map((addr) => (
-                <label
-                  key={addr.id}
-                  className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-colors ${
-                    selectedAddress === addr.id
-                      ? 'border-primary-600 bg-primary-50'
-                      : 'border-ink-200 hover:border-primary-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="address"
-                    checked={selectedAddress === addr.id}
-                    onChange={() => setSelectedAddress(addr.id)}
-                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500"
-                  />
+              {addresses.map((addr) => {
+                const addressId = addr._id || addr.id
 
-                  <div>
-                    <p className="text-sm font-semibold text-ink-900">
-                      {addr.name}
-                    </p>
+                return (
+                  <label
+                    key={addressId}
+                    className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-colors ${
+                      selectedAddress === addressId
+                        ? 'border-primary-600 bg-primary-50'
+                        : 'border-ink-200 hover:border-primary-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="address"
+                      value={addressId}
+                      checked={
+                        selectedAddress === addressId
+                      }
+                      onChange={() =>
+                        setSelectedAddress(addressId)
+                      }
+                      className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500"
+                    />
 
-                    <p className="text-sm text-ink-600 mt-0.5">
-                      {addr.line1}, {addr.city}, {addr.state}{' '}
-                      {addr.pincode}
-                    </p>
+                    <div>
+                      <p className="text-sm font-semibold text-ink-900">
+                        {addr.name || 'Delivery address'}
+                      </p>
 
-                    <p className="text-xs text-ink-500 mt-0.5">
-                      Phone: {addr.phone}
-                    </p>
-                  </div>
-                </label>
-              ))}
+                      <p className="text-sm text-ink-600 mt-0.5">
+                        {addr.line1}, {addr.city},{' '}
+                        {addr.state} {addr.pincode}
+                      </p>
+
+                      <p className="text-xs text-ink-500 mt-0.5">
+                        Phone: {addr.phone}
+                      </p>
+                    </div>
+                  </label>
+                )
+              })}
             </div>
           </div>
 
@@ -167,7 +189,9 @@ export default function Checkout() {
                     name="payment"
                     className="sr-only"
                     checked={payment === method.id}
-                    onChange={() => setPayment(method.id)}
+                    onChange={() =>
+                      setPayment(method.id)
+                    }
                   />
 
                   <method.icon
@@ -216,7 +240,9 @@ export default function Checkout() {
                   </div>
 
                   <span className="text-sm font-semibold text-ink-900 shrink-0">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice(
+                      item.price * item.quantity
+                    )}
                   </span>
                 </div>
               ))}
@@ -233,6 +259,7 @@ export default function Checkout() {
           <div className="space-y-2.5 text-sm">
             <div className="flex justify-between text-ink-600">
               <span>Subtotal</span>
+
               <span className="text-ink-900 font-medium">
                 {formatPrice(totals.subtotal)}
               </span>
@@ -241,6 +268,7 @@ export default function Checkout() {
             {totals.savings > 0 && (
               <div className="flex justify-between text-emerald-600">
                 <span>You save</span>
+
                 <span className="font-medium">
                   {formatPrice(totals.savings)}
                 </span>
@@ -249,6 +277,7 @@ export default function Checkout() {
 
             <div className="flex justify-between text-ink-600">
               <span>Shipping</span>
+
               <span className="text-ink-900 font-medium">
                 {totals.shipping === 0
                   ? 'Free'

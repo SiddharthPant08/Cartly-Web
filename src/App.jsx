@@ -64,7 +64,9 @@ export default function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/success/:orderId" element={<Success />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route element={<ProtectedRoute adminOnly />}>
+              <Route path="/admin" element={<Admin />} />
+            </Route>
           </Route>
 
           <Route path="/404" element={<NotFound />} />

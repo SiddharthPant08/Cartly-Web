@@ -191,9 +191,10 @@ export default function Orders() {
                       <div className="flex-1 min-w-0">
                         <Link
                           to={`/product/${
-                            item.product?._id ||
-                            item.product
-                          }`}
+                          item.product?.legacyId ||
+                          item.product?._id ||
+                          item.product
+                        }`}
                           className="text-sm font-medium text-ink-900 hover:text-primary-600 line-clamp-1"
                         >
                           {item.title}

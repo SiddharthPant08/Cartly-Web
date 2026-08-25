@@ -34,17 +34,19 @@ export function AuthProvider({ children }) {
   }, [user])
 
   const login = async (credentials) => {
-    const { user: loggedInUser, token } =
-      await loginRequest(credentials)
+  const { user: loggedInUser, token } =
+    await loginRequest(credentials)
 
-    window.localStorage.setItem('cartly:token', token)
+  // Save JWT
+  window.localStorage.setItem('cartly:token', token)
 
-    setUser(loggedInUser)
+  // Save complete user including role
+  setUser(loggedInUser)
 
-    toast.success('Welcome back!')
+  toast.success('Welcome back!')
 
-    return loggedInUser
-  }
+  return loggedInUser
+}
 
   const register = async (payload) => {
     const { user: newUser, token } =

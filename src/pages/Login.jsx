@@ -23,17 +23,25 @@ export default function Login() {
     return Object.keys(next).length === 0
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validate()) return
-    setSubmitting(true)
-    try {
-      await login(form)
+const handleSubmit = async (e) => {
+  e.preventDefault()
+
+  if (!validate()) return
+
+  setSubmitting(true)
+
+  try {
+    const loggedInUser = await login(form)
+
+    if (loggedInUser.role === 'admin') {
+      navigate('/admin', { replace: true })
+    } else {
       navigate(from, { replace: true })
-    } finally {
-      setSubmitting(false)
     }
+  } finally {
+    setSubmitting(false)
   }
+}
 
   return (
     <div className="container-page py-14 flex justify-center">

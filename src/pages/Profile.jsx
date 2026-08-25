@@ -91,7 +91,7 @@ export default function Profile() {
               )}
               <p className="font-semibold text-ink-900 text-sm">{addr.name}</p>
               <p className="mt-1 text-sm text-ink-600">
-                {addr.line1}, {addr.city}, {addr.state} {addr.pincode}
+                {addr.line1} {addr.city}, {addr.state} {addr.pincode}
               </p>
               <p className="mt-1 text-sm text-ink-500">Phone: {addr.phone}</p>
               {!addr.isDefault && (

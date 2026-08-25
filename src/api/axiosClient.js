@@ -14,7 +14,9 @@ export const apiClient = axios.create({
 // Attach JWT (once auth is backed by a real API) from localStorage automatically.
 apiClient.interceptors.request.use((config) => {
   try {
-    const token = window.localStorage.getItem('cartly:token')
+    const token =
+  window.localStorage.getItem('cartly:token') ||
+  window.localStorage.getItem('token')
     if (token) config.headers.Authorization = `Bearer ${token}`
   } catch {
     // localStorage unavailable (SSR/private mode) - proceed without auth header
